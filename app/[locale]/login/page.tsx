@@ -39,10 +39,10 @@ export default async function Login({
       .select("*")
       .eq("user_id", session.user.id)
       .eq("is_home", true)
-      .single()
+      .maybeSingle() // ✅ changed from .single() to .maybeSingle()
 
     if (!homeWorkspace) {
-      throw new Error(error.message)
+      throw new Error(error?.message || "Home workspace not found.")
     }
 
     return redirect(`/${homeWorkspace.id}/chat`)
@@ -70,7 +70,7 @@ export default async function Login({
       .select("*")
       .eq("user_id", data.user.id)
       .eq("is_home", true)
-      .single()
+      .maybeSingle() // ✅ changed from .single() to .maybeSingle()
 
     if (!homeWorkspace) {
       throw new Error(
@@ -108,7 +108,6 @@ export default async function Login({
       ? emailWhitelistPatternsString?.split(",")
       : []
 
-    // If there are whitelist patterns, check if the email is allowed to sign up
     if (emailDomainWhitelist.length > 0 || emailWhitelist.length > 0) {
       const domainMatch = emailDomainWhitelist?.includes(email.split("@")[1])
       const emailMatch = emailWhitelist?.includes(email)
@@ -124,11 +123,7 @@ export default async function Login({
 
     const { error } = await supabase.auth.signUp({
       email,
-      password,
-      options: {
-        // USE IF YOU WANT TO SEND EMAIL VERIFICATION, ALSO CHANGE TOML FILE
-        // emailRedirectTo: `${origin}/auth/callback`
-      }
+      password
     })
 
     if (error) {
@@ -137,9 +132,6 @@ export default async function Login({
     }
 
     return redirect("/setup")
-
-    // USE IF YOU WANT TO SEND EMAIL VERIFICATION, ALSO CHANGE TOML FILE
-    // return redirect("/login?message=Check email to continue sign in process")
   }
 
   const handleResetPassword = async (formData: FormData) => {
